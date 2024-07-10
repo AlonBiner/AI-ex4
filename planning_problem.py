@@ -42,12 +42,15 @@ class PlanningProblem:
 
     def get_start_state(self):
         "*** YOUR CODE HERE ***"
+        return self.initialState
 
     def is_goal_state(self, state):
         """
         Hint: you might want to take a look at goal_state_not_in_prop_payer function
         """
         "*** YOUR CODE HERE ***"
+        return not self.goal_state_not_in_prop_layer(state)
+
 
     def get_successors(self, state):
         """
@@ -64,6 +67,19 @@ class PlanningProblem:
         """
         self.expanded += 1
         "*** YOUR CODE HERE ***"
+        successors = []
+        for action in self.actions:
+            if action.is_noop():
+                continue
+            if action.all_preconds_in_list(state):
+                new_state = set(state)
+                for prop in action.get_delete():
+                    new_state.remove(prop)
+                for prop in action.get_add():
+                    new_state.add(prop)
+                new_state = frozenset(new_state)
+                successors.append((new_state, action, 1))
+        return successors
 
     @staticmethod
     def get_cost_of_actions( actions):
@@ -105,7 +121,25 @@ def max_level(state, planning_problem):
     pg_init = PlanGraphLevel()                   #create a new plan graph level (level is the action layer and the propositions layer)
     pg_init.set_proposition_layer(prop_layer_init)   #update the new plan graph level with the the proposition layer
     """
-    "*** YOUR CODE HERE ***"
+    prop_layer_init = PropositionLayer()  # Create a new proposition layer
+    for prop in state:
+        prop_layer_init.add_proposition(prop)  # Update the proposition layer with the propositions of the state
+
+    pg_init = PlanGraphLevel()  # Create a new plan graph level (level is the action layer and the propositions layer)
+    pg_init.set_proposition_layer(prop_layer_init)  # Update the new plan graph level with the proposition layer
+
+    graph = [pg_init]
+    level = 0
+
+    while not planning_problem.is_goal_state(graph[level].get_proposition_layer().get_propositions()):
+        if is_fixed(graph, level):
+            return float('inf')
+        next_level = PlanGraphLevel()
+        next_level.expand_without_mutex(graph[level])
+        graph.append(next_level)
+        level += 1
+
+    return level
 
 
 def level_sum(state, planning_problem):
@@ -114,6 +148,29 @@ def level_sum(state, planning_problem):
     If the goal is not reachable from the state your heuristic should return float('inf')
     """
     "*** YOUR CODE HERE ***"
+    prop_layer_init = PropositionLayer()  # Create a new proposition layer
+    for prop in state:
+        prop_layer_init.add_proposition(prop)  # Update the proposition layer with the propositions of the state
+
+    pg_init = PlanGraphLevel()  # Create a new plan graph level (level is the action layer and the propositions layer)
+    pg_init.set_proposition_layer(prop_layer_init)  # Update the new plan graph level with the proposition layer
+
+    graph = [pg_init]
+    level = 0
+    sub_goals = 0
+
+    while not planning_problem.is_goal_state(graph[level].get_proposition_layer().get_propositions()):
+        if is_fixed(graph, level):
+            return float('inf')
+        next_level = PlanGraphLevel()
+        next_level.expand_without_mutex(graph[level])
+        graph.append(next_level)
+        level += 1
+        for prop in next_level.get_proposition_layer().get_propositions():
+            if prop in planning_problem.goal:
+                sub_goals += level
+
+    return sub_goals
 
 
 def is_fixed(graph, level):
