@@ -108,13 +108,14 @@ class PlanGraphLevel(object):
         #     propositions_in_layer[prop.get_name()] = prop
 
         for action in current_layer_actions:
-            if action.get_name() not in propositions_in_layer:
-                prop = Proposition(action.get_name())
-                prop.add_producer(action)
-                propositions_in_layer[prop.get_name()] = prop
-            else:
-                propositions_in_layer[action.get_name()].add_producer(action)
-            self.proposition_layer.add_proposition(propositions_in_layer[action.get_name()])
+            for effect in action.get_add():
+                if effect.get_name() not in propositions_in_layer:
+                    prop = Proposition(effect.get_name())
+                    prop.add_producer(action)
+                    propositions_in_layer[prop.get_name()] = prop
+                else:
+                    propositions_in_layer[effect.get_name()].add_producer(action)
+                self.proposition_layer.add_proposition(propositions_in_layer[effect.get_name()])
 
     def update_mutex_proposition(self):
         """
@@ -183,8 +184,8 @@ def have_competing_needs(a1, a2, mutex_props):
         for a2_precondition in a2.get_pre():
             if Pair(a1_precondition, a2_precondition) in mutex_props or Pair(a2_precondition,
                                                                              a1_precondition) in mutex_props:
-                return False
-    return True
+                return True
+    return False
 
 
 def mutex_propositions(prop1, prop2, mutex_actions_list):
@@ -195,8 +196,8 @@ def mutex_propositions(prop1, prop2, mutex_actions_list):
     You might want to use this function:
     prop1.get_producers() returns the set of all the possible actions in the layer that have prop1 on their add list
     """
-    if prop1 == prop2:
-        return False
+    # if prop1 == prop2:
+    #     return False
     for action1 in prop1.get_producers():
         for action2 in prop2.get_producers():
             if Pair(action1, action2) not in mutex_actions_list or Pair(action2, action1) not in mutex_actions_list:

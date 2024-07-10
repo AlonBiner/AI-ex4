@@ -233,10 +233,29 @@ def independent_pair(a1, a2):
     a1.is_pos_effect(p) returns true is p is in a1.get_add()
     a1.is_neg_effect(p) returns true is p is in a1.get_delete()
     """
-    for added_proposition in a1.get_add():
-        if a2.is_pos_effect(not added_proposition) or a2.is_pre_cond(not added_proposition):
+    # for added_proposition in a1.get_add():
+    #     if a2.is_pos_effect(not added_proposition) or a2.is_pre_cond(not added_proposition):
+    #         return False
+    #
+    # return True
+
+    # Check for inconsistent effects
+    # for prop in a1.get_delete():
+    #     if prop in a2.get_add():
+    #         return False
+    # for prop in a2.get_delete():
+    #     if prop in a1.get_add():
+    #         return False
+
+    # Check for interference
+    for prop in a1.get_delete():
+        if prop in a2.get_pre() or prop in a2.get_add():
+            return False
+    for prop in a2.get_delete():
+        if prop in a1.get_pre() or prop in a1.get_add():
             return False
 
+    # If neither condition is met, the actions are independent
     return True
 
 
